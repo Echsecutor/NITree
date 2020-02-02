@@ -11,7 +11,10 @@ For simplicity, we consider only the following data types:
 - A String is an Object
 - An unordered List of Objects is an Object
 - An unordered Map of Strings to Objects is an Object
+
+SOme special cases:
 - The empty String/List/Map are all considered to be the same (emty) Object `""`
+- A list of a single element is considered the same as the element itself.
 
 The Input to the NITree generating Algorithm may be any Object.
 
