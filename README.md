@@ -93,6 +93,13 @@ and tree leaves
 ]
 ```
 
+## References / Acknowledgment
+
+Ideas for this algorithm are rooted in
+
+- ![R. Tröger, S. Clanzett, R. J. Lehmann: Innovative Solution Approach for Controlling Access to Visibility Data in Open Food Supply Chains](http://dx.doi.org/10.18461/pfsd.2018.1817)
+- M. Guenther, D. Woerner: ​ SupplyTree - A Federated Systems Approach to solve Supply Chain Traceability
+- S. Schmittner: CIRC4Life - Deliverable 5.2 - Development Report and Documentation for Traceability Components and Tools - Data Access Model
 
 
 ## License
