@@ -1,3 +1,26 @@
+"""
+NITree
+
+This is a proof of concept implementation for an algorithm that uses Named Identifiers (see RFC 6920 ) to hash a given key-value data structure (e.g. JSON) into a merkle tree like structure can be shared wihtout loosing full fine grained data access control. Publishing this Named Identifiers Tree (root), e.g. on a distributed ledger, can be used to notarize the full data structure. Furthermore, RFC 6920 specifies a URL too query for the data behind the NI. The data owner being querried can then authorise the querying party and reveal parts or all of the data in the NITree. By checking the hashes, the querying party can be sure to receive authentic data.
+
+For further Details see the README.
+
+.. module:: forest
+   :synopsis: grows trees
+
+.. moduleauthor:: Sebastian Schmittner <sebastian@schmittner.pw>
+
+Copyright 2020 Sebastian Schmittner
+
+This program is free software: you can redistribute it and/or modify
+it under the terms given in the LICENSE file.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the LICENSE
+file for details.
+
+"""
 
 import logging
 import hashlib
