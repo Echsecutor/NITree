@@ -1,48 +1,60 @@
 # NITree
 
-This is a proof of concept implementation for an algorithm that uses Named Identifiers (see [RFC 6920](https://www.rfc-editor.org/info/rfc6920) ) to hash a given key-value data structure (e.g. JSON) into a merkle tree like structure can be shared wihtout loosing full fine grained data access control. Publishing this Named Identifiers Tree (root), e.g. on a distributed ledger, can be used to notarize the full data structure. Furthermore, RFC 6920 specifies a URL too query for the data behind the NI. The data owner being querried can then authorise the querying party and reveal parts or all of the data in the NITree. By checking the hashes, the querying party can be sure to receive authentic data.
+This Repository is used to develope *Named Identifier Trees (NITrees)*. An NITree is a datastructure which is derived from some *plain text* data object. A protocol to lookup the plaintext data and veryfy its integrity from the NITree is developed alongside the NITree object to make use of the concept.
+
+## General Idea
+
+NITrees make use of Named Identifiers (NIs, see [RFC 6920](https://www.rfc-editor.org/info/rfc6920) ) to hash a given data structure (e.g. in JSON) into a structure of hashes that can be shared wihtout loosing full fine grained data access control. Publishing this Named Identifiers Tree (root), e.g. on a distributed ledger, can be used to notarize the full data structure. RFC 6920 specifies which URL to query for the data behind the NI. The data owner being querried can then authorise the querying party and reveal parts or all of the data in the NITree. By checking the hashes, the querying party can be sure to receive authentic data.
+
+
+Being more explicit, an NITree has the following defining properties:
+- The NITree contains a full comittment to the data object, i.e. given the NITree and the data object, anyone can verify thet the NITree was indeed derived from the data object. Furthermore, the commitment is one-way, i.e. it is not possible to derive the plaintext from the NITree and collissions are minimized, i.e. it is extremely unlikely that two different data objects yield the same NITree.
+  - This means, that the NITree contains a cryptographic hash of the plain text.
+- The NITree contains all information to derive a URL from which anyone knowing the NITree can `GET` (https) the plain text data. The host may authorise the requesting party and grant or deny access to the plain text at his own descretion. 
+  - A NI that includes a domain (authority) has both properties. In fact, such a NI is the simplest form of an NITree.
+- The NITree contains structural information about the plain text data. Some of the data may be contained in plain text while only some sensitive parts are conceiled.
+- NITrees can be nested in order to implement fine grained access control to different parts of the plain text data.
 
 
 ## Specs
 
-### Input
+### Data Objects
 
 For simplicity, we consider only the following data types:
 - A String is an Object
 - An unordered List of Objects is an Object
-- An unordered Map of Strings to Objects is an Object
+- An ordered n-tuple (e.g. a pair) of objects is an object
+  - In particular, a list of pairs where the first elements of each pair are required to be unique, i.e. a map/dictionary, is an object
 
-SOme special cases:
-- The empty String/List/Map are all considered to be the same (emty) Object `""`
-- A list of a single element is considered the same as the element itself.
 
-The Input to the NITree generating Algorithm may be any Object.
+This means, that we treat all other data types (integer, floating point numbers, boolean, etc.) as strings. In practice, it is important to have a unique serialization to strings of all such data types.
 
-### Root
+
+### NI Roots
 
 A root of an NITree is a named identifier of the form "ni://n-authority/alg;val" where
-- "alg" is the name of a hashing algorithm, e.g. "sha-256", see [RFC 6920](https://www.rfc-editor.org/info/rfc6920) for details. We will throughout use sha-256 for the specification, but of course any other cryptographic hash algorithm may be used in practise.
-- "n-authority" is a domain name, e.g. "example.com". n-authority SHOULD be given for the main root in order to allow for data lookup. It MAY be omitted for sub-tree roots, in which case it is assumed to be the same as for the main root.
-- "val" is the hash value
+- "alg" is the name of a hashing algorithm, e.g. "sha-256", see [RFC 6920](https://www.rfc-editor.org/info/rfc6920) for details. We will throughout use sha-256, but of course any other cryptographic hash algorithm may be used in practise.
+- "n-authority" is a domain name, e.g. "example.com". n-authority SHOULD be given for the main root in order to allow for data lookup. It MAY be omitted for roots of sub-trees, in which case it is assumed to be the same as for the main root.
+- "val" is the hash value of the NITree "below this root"
 
-### Collisions
 
-Different data inputs are to yield different main roots (up to collisions in the underlying hashing alg).
+### Growing NITrees
 
-### Algorithm
 
 #### Salted NIs for Strings
 
-A string is converted into a root by first applying alg to the to generate a named identifier of the form
-`ni://alg;val`. E.g. "Hello World!" yields 
-```ni://sha-256;03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340```
+A string is converted into a root in two steps. First, compute `ni://alg;val` by applying `alg` to the string to yield `val`.
+E.g. "Hello World!" yields 
+```
+ni://sha-256;03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340
+```
 
 To prevent rainbow table/guessing attacks on the hash, the result SHOULD be salted and hashed again as follows:
 A random salt is appended as a query parameter according to RFC 6920, e.g.
 ```
 ni://sha-256;03ba204e50d126e4674c005e04d82e84c21366780af1f43bd54a37816b6ab340?salt=NIPSI2XQLTRCNIUAYBNNWV6K5Q
 ```
-The length (entropy) of the salt can be adapted according to security needs. The resulting NI + salt is considered a string and hashed again into the NIroot, e.g.
+The length (entropy) of the salt can be adapted according to security needs. The resulting salted NI is considered a string and hashed again into the NIroot by again applying `alg`. The example yields:
 ```
 ni://example.com/sha-256;22aada314d02532757013651bf5ca5c5ecd36640c2d47b3470abd9cfadd246da
 ```
@@ -58,7 +70,8 @@ The resulting NITree consists of the resulting root, the intermediate NI and the
 )
 ```
 
-If the original String already contains enough entropy, e.g. a large random number such as a serial, the salting step MAY be omitted. The Empty String should always be salted.
+If the original String already contains enough entropy, e.g. a large random number such as a serial, the salting step MAY be omitted. The Empty String should always be salted or not concealed at all.
+
 
 #### Combining NIs
 
