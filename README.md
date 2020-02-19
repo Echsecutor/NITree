@@ -102,13 +102,19 @@ The resulting NITree (revealing all sub trees) is
 ```
 
 In a typical use case,
-`ni://example.com/sha-256;9a9c0e29eddafd03f046865ea8369777544ff6bff251f9d61f5fe9311a8ffede`
+```
+ni://example.com/sha-256;9a9c0e29eddafd03f046865ea8369777544ff6bff251f9d61f5fe9311a8ffede
+```
 would be published. If access is granted to an authorized query to
 http://example.com/.well-known/ni/sha-256/9a9c0e29eddafd03f046865ea8369777544ff6bff251f9d61f5fe9311a8ffede
 , the host would typically answer with
-`("ni://sha-256;7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069?salt=NIPSI2XQLTRCNIUAYBNNWV6K5Q",
-"Hello World!")` from where the querying party can verify the data
-integrity.
+```
+(
+  "ni://sha-256;7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069?salt=NIPSI2XQLTRCNIUAYBNNWV6K5Q",
+  "Hello World!"
+)
+```
+from where the querying party can verify the data integrity.
 
 
 
@@ -132,7 +138,10 @@ For Example `["Hello", "World"]` yields the NITree
 ]
 ```
 where salting has been omitted for simplicity in this example, but should be used for similar string values in practise. The root of this tree is
-`ni://example.com/sha-256;b08598298a9070b51e0ec444295ffa3da5ec68e5bf94456de7d57b1393845951`.
+```
+ni://example.com/sha-256;b08598298a9070b51e0ec444295ffa3da5ec68e5bf94456de7d57b1393845951
+```
+
 
 
 #### Trees for Tuples
