@@ -53,7 +53,7 @@ A root of an NITree is a named identifier of the form `ni://authority/alg;val?qu
 
 #### Lookup
 
-According to RFC 6920, the tree below the root `ni://authority/alg;val?query-string` can be `GET` queried at http://authority/.well-known/ni/alg/val?query-string which SHOULD redirect to a http**s** URL. If authorisation is required, the host MUST redirect in order to use TLS.
+According to RFC 6920, the tree below the root `ni://authority/alg;val?query-string` can be `GET` queried at https://authority/.well-known/ni/alg/val?query-string . The corresponding http:// URL SHOULD redirect to http**s** but the client SHOULD query https directly. If authorisation is required, the host MUST enforce TLS or reject the communication.
 The queried host SHOULD answer with one of the following status codes:
 - `200 OK` and the body containing the tree that grows from the root
 - `401 Unauthorized` in order to indicate that the requesting party needs to be authorized in order to get access.
