@@ -1,32 +1,33 @@
 # NITree
 
-This Repository is used to develope *Named Identifier Trees
-(NITrees)*. An NITree is a datastructure which is derived from some
-*plain text* data object. A protocol to lookup the plaintext data and
-veryfy its integrity from the NITree is developed alongside the NITree
-object to make use of the concept.
+This Repository is used to develop *Named Identifier Trees
+(NITrees)*. An NITree is a data structure which is derived from some
+*plain text* data object. A protocol to lookup the plain text data and
+verify its integrity from the NITree is developed alongside the NITree
+object definition in order to make the concept usable.
 
 ## General Idea
 
 NITrees make use of Named Identifiers (NIs, see [RFC
 6920](https://www.rfc-editor.org/info/rfc6920) ) to hash a given data
 structure (e.g. in JSON) into a structure of hashes that can be shared
-wihtout loosing full fine grained data access control. Publishing this
-Named Identifiers Tree (root), e.g. on a distributed ledger, can be
+without loosing fine grained data access control. Publishing this
+Named Identifier Tree root, e.g. on a distributed ledger, can be
 used to notarize the full data structure. RFC 6920 specifies which URL
-to query for the data behind the NI. The data owner being querried can
-then authorise the querying party and reveal parts or all of the data
+to query for the data behind the NI. The data owner being queried can
+then authorize the querying party and reveal parts or all of the data
 in the NITree. By checking the hashes, the querying party can be sure
 to receive authentic data.
 
 
 Being more explicit, an NITree has the following defining properties:
-- The NITree contains a full comittment to the data object, i.e. given the NITree and the data object, anyone can verify thet the NITree was indeed derived from the data object. Furthermore, the commitment is one-way, i.e. it is not possible to derive the plaintext from the NITree and collissions are minimized, i.e. it is extremely unlikely that two different data objects yield the same NITree.
-  - This means, that the NITree contains a cryptographic hash of the plain text.
-- The NITree contains all information to derive a URL from which anyone knowing the NITree can `GET` (http) the plain text data. The host may authorise the requesting party and grant or deny access to the plain text at his own descretion. 
-  - A NI that includes a domain (authority) has both properties. In fact, such a NI is the simplest form of an NITree.
-- The NITree contains structural information about the plain text data. Some of the data may be contained in plain text while only some sensitive parts are conceiled.
+- The NITree contains a full commitment to the data object, i.e. given the NITree root and the data object, anyone can verify that the NITree was indeed derived from the data object. Furthermore, the commitment is one-way, i.e. it is not possible to derive the plain text from the NITree. Collisions are minimized, i.e. it is extremely unlikely that two different data objects yield the same NITree.
+  - This means, that the NITree contains a cryptography hash of the plain text data.
+- The NITree root contains all information to derive a URL from which one can `GET` (https) the plain text data. The host may authorize the requesting party and grant or deny access to the plain text at his own discretion. 
+  - A NI that includes a domain (authority) has both properties. In fact, such a NI is the simplest form of an NITree consisting only of a root.
+- The NITree contains structural information about the plain text data. Some of the data may be contained in plain text while only some sensitive parts are concealed.
 - NITrees can be nested in order to implement fine grained access control to different parts of the plain text data.
+- It is possible to reveal only parts of the structure and plain text data and still being able to verify that this data is authentic following the general Merkle tree idea when building the NITree.
 
 
 ## Specs
@@ -40,30 +41,45 @@ For simplicity, we consider only the following data types:
   - In particular, a list of pairs where the first elements of each pair are required to be unique, i.e. a map/dictionary, is an object
 
 
-This means, that we treat all other data types (integer, floating point numbers, boolean, etc.) as strings. In practice, it is important to have a unique serialization to strings of all such data types.
+This means, that we treat all other data types (integer, floating
+point numbers, boolean, etc.) as strings. In practice, it is important
+to have a unique serialization to strings of all such data
+types. (E.g. dis ambiguities between "False" / "false" / "0" / "" / "None" / ... need to be avoided.)
 
 
 ### NI Roots
 
 A root of an NITree is a named identifier of the form `ni://authority/alg;val?query-string` where
-- `alg` is the name of a hashing algorithm, e.g. `sha-256`, see [RFC 6920](https://www.rfc-editor.org/info/rfc6920) for details. We will throughout use sha-256, but of course any other cryptographic hash algorithm may be used in practise.
-- `authority` is a domain name, e.g. `example.com`. `authority` SHOULD be given for the main root in order to allow for data lookup. It MAY be omitted for roots of sub-trees, in which case it is assumed to be the same as for the main root.
+- `alg` is the name of a hashing algorithm, e.g. `sha-256`, see [RFC 6920](https://www.rfc-editor.org/info/rfc6920) for details. We will
+  throughout use `sha-256`, but of course any other cryptography hash
+  algorithm may be used in practice.
+- `authority` is a domain name, e.g. `example.com`. `authority` SHOULD
+  be given for the main root in order to allow for data lookup. It MAY
+  be omitted for roots of sub-trees, in which case it is assumed to be
+  the same as for the main root.
 - `val` is the hash value of the NITree "growing from this root".
-- The `?query-string` is optional. If given, the `query-string` is a `&` separated `key=value` list as used with HTTP URLs, see [RFC2616](https://www.rfc-editor.org/rfc/rfc2616).
+- The `?query-string` is optional. If given, the `query-string` is a
+  `&` separated `key=value` list as used with HTTP URLs, see
+  [RFC2616](https://www.rfc-editor.org/rfc/rfc2616).
 
 #### Lookup
 
-According to RFC 6920, the tree below the root `ni://authority/alg;val?query-string` can be `GET` queried at https://authority/.well-known/ni/alg/val?query-string . The corresponding http:// URL SHOULD redirect to http**s** but the client SHOULD query https directly. If authorisation is required, the host MUST enforce TLS or reject the communication.
+According to RFC 6920, the tree below the root `ni://authority/alg;val?query-string` can be `GET` queried at https://authority/.well-known/ni/alg/val?query-string . The corresponding http:// URL SHOULD redirect to http**s** but the client SHOULD query https directly. If authorization is required, the host MUST enforce TLS or reject the communication.
 The queried host SHOULD answer with one of the following status codes:
 - `200 OK` and the body containing the tree that grows from the root
 - `401 Unauthorized` in order to indicate that the requesting party needs to be authorized in order to get access.
-- `403 Forbidden` in order to indicate that authorisation was successful but the host denies to reveal further information to the requesting party.
+- `403 Forbidden` in order to indicate that authorization was successful but the host denies to reveal further information to the requesting party.
 - `404 Not Found` in order to indicate that the host does not know the tree growing form this root.
 
 
 ### Revealing Trees
 
-Wherever a root is expected, the pair of the root and its tree may be used instead. This saves one lookup in cases where no additional authorisation/permission checks are required, i.e. if anyone with access to the root is also allowed to access the tree, the two can be directly send as a pair. For upstream hashing, the pair of root and tree is considered as if only the root string was given.
+Wherever a root is expected, the pair of the root and its tree may be
+used instead. This saves one lookup in cases where no additional
+authorization/permission checks are required, i.e. if anyone with
+access to the root is also allowed to access the tree, the two can be
+directly send as a pair. For upstream hashing, the pair of root and
+tree is considered as if only the root string was given.
 
 
 ### Growing NITrees
@@ -137,7 +153,7 @@ For Example `["Hello", "World"]` yields the NITree
 "ni:///sha-256;78ae647dc5544d227130a0682a51e30bc7777fbb6d8a8f17007463a3ecd1d524"
 ]
 ```
-where salting has been omitted for simplicity in this example, but should be used for similar string values in practise. The root of this tree is
+where salting has been omitted for simplicity in this example, but should be used for similar string values in practice. The root of this tree is
 ```
 ni://example.com/sha-256;3e11ba5abe0b6cede3b05e94baa6974b0f1ebb0f9cb8fbf7702ff8858ba20604
 ```
@@ -146,7 +162,7 @@ ni://example.com/sha-256;3e11ba5abe0b6cede3b05e94baa6974b0f1ebb0f9cb8fbf7702ff88
 
 #### Trees for Tuples
 
-Replacing each element of the touple by its NIRoot yields the NITree for the touple. The root is obtained by concatenating the element root strings in the given order and applying `alg`.
+Replacing each element of the tuple by its NIRoot yields the NITree for the tuple. The root is obtained by concatenating the element root strings in the given order and applying `alg`.
 
 For example `("World", "Hello")` yields the NIRoot (all sub trees revealed)
 ```
@@ -167,6 +183,9 @@ Ideas for this algorithm are rooted in
 - [R. Tröger, S. Clanzett, R. J. Lehmann: Innovative Solution Approach for Controlling Access to Visibility Data in Open Food Supply Chains](http://dx.doi.org/10.18461/pfsd.2018.1817)
 - M. Guenther, D. Woerner: ​ SupplyTree - A Federated Systems Approach to solve Supply Chain Traceability
 - S. Schmittner: CIRC4Life - Deliverable 5.2 - Development Report and Documentation for Traceability Components and Tools - Data Access Model
+
+An Algorithm with a more specific scope and a subset of the features of NITrees is developed in parallel at
+- https://github.com/RalphTro/epcis-event-hash-generator
 
 
 ## License
